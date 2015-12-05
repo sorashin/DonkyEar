@@ -126,6 +126,4 @@ void loop(){
         digitalWrite(switchPin, LOW);
         digitalWrite(playPin, HIGH);
         Serial.println("playing/on");
-//        delay(200);
-//        currentX = analogRead(0);
       }
