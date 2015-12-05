@@ -1,0 +1,131 @@
+const int switchPin = 5;
+const int playPin = 8;
+const int sensorPin = A0;
+const int INIT = 0;
+const int BRIGHT = 1;
+const int DARK = 2;
+
+int threshold = 0;
+int hysteresis = 0;
+int lastState = INIT;
+int input;
+int currentX;
+int lastX;
+int stateCounter = 0;
+
+void setup(){
+  pinMode(switchPin, OUTPUT);
+  pinMode(playPin, OUTPUT);
+  
+  digitalWrite(switchPin, LOW);
+  
+  Serial.begin(9600);
+  measureBaseLine();
+}
+
+void loop(){
+      int state = lastState;
+      int sensorValue = analogRead(sensorPin);
+      
+      //Define BRIGHT/DARK
+      if (sensorValue > (threshold + hysteresis)){
+        state = BRIGHT;
+        Serial.println("BRIGHT!");
+      }
+      else if(sensorValue < (threshold - hysteresis)){
+        state = DARK;
+        Serial.println("DARK!");
+      }
+      
+      if((lastState != BRIGHT)&&(state == BRIGHT)){
+        stateCounter += 1;
+      }
+      if((lastState != DARK)&&(state == DARK)){
+        stateCounter += 1;
+      }
+      
+      int currentState=stateCounter%4;
+      Serial.println(currentState);
+      //条件分け
+      if(currentState == 0){
+        recordOff();
+      }
+      else if(currentState == 1){
+        recordOn();
+      }
+      else if(currentState == 2){
+        playOff();
+      }
+      else if(currentState == 3){
+        playOn();
+      }
+
+      
+      
+      lastState = state;
+      
+      delay(100);      
+      }
+      
+      void measureBaseLine(){
+        long total = 0;
+        int count = 0;
+        
+        Serial.println("Calibrating...");
+        
+        while(millis() < 5000){
+          int sensorValue = analogRead(sensorPin);
+          total += sensorValue;
+          count++;
+          delay(1);
+        }
+        Serial.println("Done !");
+        Serial.println();
+        
+        int avarage = total / count;
+        Serial.print("total = ");
+        Serial.println(total);
+        Serial.print("count = ");
+        Serial.println(count);
+        Serial.print("avarage = ");
+        Serial.println(avarage);
+        
+        threshold = int((float)avarage*0.9);
+        if (threshold > 511){
+          hysteresis = (1023 - threshold)/10;
+        }
+        else{
+          hysteresis = threshold/10;
+        }
+        
+        Serial.print("threshold = ");
+        Serial.println(threshold);
+        Serial.print("hysteresis = ");
+        Serial.println(hysteresis);
+      }
+      
+      void recordOff(){
+        digitalWrite(switchPin, HIGH);
+        digitalWrite(playPin, LOW);
+        Serial.println("recording/off");
+      }
+      
+      void recordOn(){
+        digitalWrite(switchPin, HIGH);
+        digitalWrite(playPin, HIGH);
+        Serial.println("recording/on");
+      }
+      
+      void playOff(){
+        digitalWrite(switchPin, LOW);
+        digitalWrite(playPin, LOW);
+        Serial.println("playing/off");
+      }
+      
+      void playOn(){
+        digitalWrite(switchPin, LOW);
+        digitalWrite(playPin, HIGH);
+        Serial.println("playing/on");
+//        delay(200);
+//        currentX = analogRead(0);
+      }
